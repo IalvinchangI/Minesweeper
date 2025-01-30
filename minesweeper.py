@@ -29,17 +29,19 @@ class GUImines():
         }  #(數字鍵)
         return tuple([i[1] for i in pos_dict.items() if not i[0] % step])
     
-    def __init__(self, x, y, bg="dimgray"):
+    def __init__(self, x, y, background="dimgray"):
         self.x = x
         self.y = y
-        self.bg = bg
         self.label = tk.Label(self.window, font=self.label_font,
-                              width=self.width, height=self.height, relief="flat", bg=self.bg)
+                              width=self.width, height=self.height, relief="flat", bg=background)
         self.button = tk.Button(self.window, font=self.button_font,
                                 width=self.width, height=self.height, relief="flat",
-                                bg=self.bg, command=self.__btn_dig)
-        self.label.grid(row=self.y + self.top_y + 1, column=self.x + 1)
-        self.button.grid(row=self.y + self.top_y + 1, column=self.x + 1)
+                                bg=background, command=self.__btn_dig)
+    def grid(self, x_start=1, y_start=1):
+        self.x_start = x_start
+        self.y_start = y_start
+        self.label.grid(row=self.y + self.top_y + y_start, column=self.x + x_start)
+        self.button.grid(row=self.y + self.top_y + y_start, column=self.x + x_start)
 
     def __btn_dig(self):
         self.blank = self.list_xy[self.y][self.x][0]
@@ -83,7 +85,7 @@ class GUImines():
         self.data.append(tk.Button(window, text=word, font="Helvetica 17 bold",
                         width=self.width * self.xd, height=self.height * (self.yd - 1), relief="flat",
                         fg="slategray", command=self.__btn_gameover))
-        self.data[2].grid(row=self.top_y + 1, column=1, rowspan=self.yd, columnspan=self.xd)
+        self.data[2].grid(row=self.top_y + self.y_start, column=self.x_start, rowspan=self.yd, columnspan=self.xd)
     
     def __btn_gameover(self):
         self.data[2].destroy()
@@ -100,6 +102,8 @@ class Ground():
     height = 1  #一格高度
     x_original = 0
     y_original = 0
+    min_frame_x = 11
+    x_start = 1
     difficulty_dict = {12:("Easy", "limegreen"), 7:("Normal", "darkorange"), 4:("Hard", "crimson")}
     fill = lambda self, list_, lable: list_.append(lable)
     @classmethod
@@ -109,6 +113,7 @@ class Ground():
         cls.top_y = top_y
         cls.top_lable = []
         cls.frame_top_lable, cls.frame_right_lable, cls.frame_bottom_lable, cls.frame_left_lable = [], [], [], []
+        cls.extra_frame_label = [[], []]
 
     def __init__(self, xd, yd):
         self.xd = xd  #地圖寬度
@@ -116,6 +121,13 @@ class Ground():
         self.ground = list([[0, None][:] for i in range(xd + 1)[:]] for i in range(yd + 1))
         self.data = []
 
+        if self.xd < (self.min_frame_x - 2):
+            if not (self.xd % 2):
+                self.min_frame_x += 1
+            for i in range((self.min_frame_x - 2 - self.xd) // 2):
+                self.extra_frame_label[0].append([])
+                self.extra_frame_label[1].append([])
+            self.x_start = len(self.extra_frame_label[0]) + 1
         self.x_add = self.xd + 2 - self.x_original
         self.y_add = self.yd - self.y_original
         
@@ -127,7 +139,7 @@ class Ground():
                     self.ground[y][x][1] = GUImines(x, y)
                 else:
                     self.ground[y][x][1] = GUImines(x, y, "gray")
-                
+                self.ground[y][x][1].grid(self.x_start)
                 if random.randint(0, self.difficulty.get()) == 0:
                     self.ground[y][x][0] = 9  #mine
                     self.data[0] += 1
@@ -151,10 +163,16 @@ class Ground():
                 if self.ground[y][x][0] != -1:
                     self.ground[y][x][1].button.destroy()
                 del self.ground[y][x][:]
-        
+        if self.x_start - 1 != 0:
+            for i in range(2):
+                for x in range(self.x_start - 1):
+                    for y in range(self.yd):
+                        self.extra_frame_label[i][-1][-1].destroy()
+                        del self.extra_frame_label[i][-1][-1]
+                    del self.extra_frame_label[i][-1]
+            self.x_start = 1
         self.exit_button.destroy()
         del self.exit_button
-
     
     def top_Label(self):
         '''選項區的背景'''
@@ -166,19 +184,24 @@ class Ground():
                                 width=self.width, height=self.height * (self.top_y - 1), relief="flat",
                                 bg="slategray"))
                 self.top_lable[x].grid(row=0, column=x, rowspan=self.top_y - 1)
-            while len(self.top_lable) <= 10:
+            while len(self.top_lable) <= self.min_frame_x:
                 x += 1
                 self.fill(self.top_lable, tk.Label(self.window, font="Helvetica 14 bold",
                                 width=self.width, height=self.height * (self.top_y - 1), relief="flat",
                                 bg="slategray"))
                 self.top_lable[x].grid(row=0, column=x, rowspan=self.top_y - 1)
         elif self.x_add < 0:
+            if len(self.top_lable) + 1 == self.min_frame_x:
+                self.fill(self.top_lable, tk.Label(self.window, font="Helvetica 14 bold",
+                            width=self.width, height=self.height * (self.top_y - 1), relief="flat",
+                            bg="slategray"))
+                self.top_lable[len(self.top_lable) - 1].grid(row=0, column=len(self.top_lable) - 1, rowspan=self.top_y - 1)
             for i in range(self.x_add, 0):
-                if len(self.top_lable) > 11:
+                if len(self.top_lable) <= self.min_frame_x:
+                    break
+                else:
                     self.top_lable[-1].destroy()
                     del self.top_lable[-1]
-                else:
-                    break
         
     def top_Button(self):  #不變
         '''選項：xd、yd、difficulty'''
@@ -206,9 +229,10 @@ class Ground():
                         bg=color, fg="black", value=val, variable=self.difficulty,
                         command=self.__btn_difficulty).grid(row=5, column=i * 3 + 1, columnspan=3)
     
-    def __btn_difficulty(self):
+    def __btn_difficulty(self):  #*************
         '''新的一盤( + 換難度)'''
         self.delete()
+        if not (self.xd % 2) and self.xd < (self.min_frame_x - 2): self.min_frame_x -= 1
         xd = self.xd_entry.get()
         yd = self.yd_entry.get()
         if xd and yd: self.__init__(int(xd), int(yd))
@@ -225,27 +249,35 @@ class Ground():
                             width=self.width, height=self.height, relief="flat",
                             bg="lightslategray"))
                 self.fill(self.frame_bottom_lable, tk.Label(self.window, font="Helvetica 14 bold",
-                            width=self.width, height=self.height, relief="flat",
+                            width=self.width, height=self.height + 1, relief="flat",
                             bg="lightslategray"))
                 self.frame_top_lable[x].grid(row=self.top_y, column=x)
-            while len(self.frame_top_lable) <= 10:
+            while len(self.frame_top_lable) <= self.min_frame_x:
                 x += 1
                 self.fill(self.frame_top_lable, tk.Label(self.window, font="Helvetica 14 bold",
                         width=self.width, height=self.height, relief="flat",
                         bg="lightslategray"))
                 self.fill(self.frame_bottom_lable, tk.Label(self.window, font="Helvetica 14 bold",
-                        width=self.width, height=self.height, relief="flat",
+                        width=self.width, height=self.height + 1, relief="flat",
                         bg="lightslategray"))
                 self.frame_top_lable[x].grid(row=self.top_y, column=x)
         elif self.x_add < 0:
+            if len(self.frame_top_lable) + 1 == self.min_frame_x:
+                self.fill(self.frame_top_lable, tk.Label(self.window, font="Helvetica 14 bold",
+                    width=self.width, height=self.height, relief="flat",
+                    bg="lightslategray"))
+                self.fill(self.frame_bottom_lable, tk.Label(self.window, font="Helvetica 14 bold",
+                        width=self.width, height=self.height + 1, relief="flat",
+                        bg="lightslategray"))
+                self.frame_top_lable[len(self.frame_top_lable) - 1].grid(row=self.top_y, column=len(self.frame_top_lable) - 1)
             for i in range(self.x_add, 0):
-                if len(self.frame_top_lable) > 11:
+                if len(self.frame_top_lable) <= self.min_frame_x:
+                    break
+                else:
                     self.frame_top_lable[-1].destroy()
                     del self.frame_top_lable[-1]
                     self.frame_bottom_lable[-1].destroy()
                     del self.frame_bottom_lable[-1]
-                else:
-                    break
         #""""""""""""""""""""""""""""""""""""""""""""""""""""""""#
         if self.y_add > 0:  #right、left
             for i in range(self.y_add):
@@ -268,27 +300,28 @@ class Ground():
             i.grid(row=self.top_y + 1 + len(self.frame_left_lable), column=x)
         for y, i in enumerate(self.frame_right_lable, self.top_y + 1):
             i.grid(row=y, column=len(self.frame_top_lable) - 1)
+        
+        if self.x_start - 1 != 0:
+            for i in range(2):
+                for x in range(self.x_start - 1):
+                    for y in range(self.yd):
+                        self.fill(self.extra_frame_label[i][x], tk.Label(self.window, font="Helvetica 14 bold",
+                            width=self.width, height=self.height, relief="flat",
+                            bg="lightslategray"))
+                        self.extra_frame_label[i][x][y].grid(row=self.top_y + 1 + y, column=i * (self.xd + self.x_start - 1) + 1 + x)
         #return original
         self.x_original = len(self.frame_top_lable)
         self.y_original = len(self.frame_left_lable)
     
     def frame_Button(self):
         '''邊框的按鈕'''
-        #self.print_button = tk.Button(self.window, text="Print", font="Helvetica 9", width=self.width * 2, height=self.height, relief="ridge", bg="lightslategray", command=self.__btn_print)
         self.exit_button = tk.Button(self.window, text="Exit", font="Helvetica 9 bold",
                         width=self.width * 2, height=self.height, relief="raised",
                         bg="darkred", fg="white", command=self.window.destroy)
-        #self.print_button.grid(row=self.yd + self.top_y + 1, column=len(self.frame_top_lable) - 4, columnspan=2)
         self.exit_button.grid(row=self.yd + self.top_y + 1, column=len(self.frame_top_lable) - 2, columnspan=2)
-    
-    def __btn_print(self):
-        '''debug'''
-        for i in range(self.yd): print(self.ground[i])
-        for i in range(self.yd + 1): print(", ".join([str(j[0]) for j in self.ground[i]]))
 
 Ground.setting()
 a = Ground(10, 10)
 a.top_Button()
-#a._Ground__btn_print()
 
 window.mainloop()
