@@ -6,8 +6,8 @@ window = tk.Tk()
 window.title("minesweeper")
 
 ###############
-xd = 40  #地圖寬度
-yd = 20  #地圖高度
+xd = 10  #地圖寬度
+yd = 10  #地圖高度
 top_y = 7
 x_size = 2  #一格寬度
 y_size = 1  #一格高度
@@ -111,25 +111,7 @@ def create(xd, yd, difficulty, top_y = 3, x_size = 2, y_size = 1):
     return ground, data
 
 def top(xd, yd, data, top_y = 3, x_size = 2, y_size = 1):
-    top_lable = []
-    fill = lambda list_, lable: list_.append(lable)
-    for x in range(xd + 2):
-        fill(top_lable, tk.Label(window, font="Helvetica 14 bold",
-                        width=x_size, height=y_size * (top_y - 1), relief="flat",
-                        bg="slategray"))
-        top_lable[x].grid(row=0, column=x, rowspan=top_y - 1)
-    difficulty_dict = {12:("Easy", "limegreen"), 7:("Normal", "darkorange"), 4:("Hard", "crimson")}
-    for i, (val, (word, color)) in enumerate(difficulty_dict.items()):
-        tk.Radiobutton(window, text=word, font="Helvetica 10 bold",
-                    width=x_size * 3, relief="raised", indicatoron=0,
-                    bg=color, fg="black", value=val, variable=difficulty, 
-                    ).grid(row=5, column=i * 3 + 1, columnspan=3)
-
-def frame(xd, yd, top_y = 3, x_size = 2, y_size = 1):
-    def btn_print():
-        for i in range(yd): print(ground[i])
-        for i in range(yd + 1): print(", ".join([str(j[0]) for j in ground[i]]))
-    def btn_new():
+    def btn_difficulty():
         global ground, data
         for y in range(yd):
             for x in range(xd):
@@ -146,6 +128,30 @@ def frame(xd, yd, top_y = 3, x_size = 2, y_size = 1):
             data[2].destroy()
         del data[:]
         ground, data = create(xd, yd, difficulty, top_y, x_size, y_size)
+    top_lable = []
+    fill = lambda list_, lable: list_.append(lable)
+    for x in range(xd + 2):
+        fill(top_lable, tk.Label(window, font="Helvetica 14 bold",
+                        width=x_size, height=y_size * (top_y - 1), relief="flat",
+                        bg="slategray"))
+        top_lable[x].grid(row=0, column=x, rowspan=top_y - 1)
+    """
+    xd_entry = tk.Entry(window, font="Helvetica 12 bold", width=x_size * 3)
+    yd_entry = tk.Entry(window, font="Helvetica 12 bold", width=x_size * 3)
+    xd_entry.grid(row=1, column=1, columnspan=3)
+    yd_entry.grid(row=1, column=4, columnspan=3)
+    """
+    difficulty_dict = {12:("Easy", "limegreen"), 7:("Normal", "darkorange"), 4:("Hard", "crimson")}
+    for i, (val, (word, color)) in enumerate(difficulty_dict.items()):
+        tk.Radiobutton(window, text=word, font="Helvetica 10 bold",
+                    width=x_size * 3, relief="raised", indicatoron=0,
+                    bg=color, fg="black", value=val, variable=difficulty,
+                    command=btn_difficulty).grid(row=5, column=i * 3 + 1, columnspan=3)
+
+def frame(xd, yd, top_y = 3, x_size = 2, y_size = 1):
+    def btn_print():
+        for i in range(yd): print(ground[i])
+        for i in range(yd + 1): print(", ".join([str(j[0]) for j in ground[i]]))
     fill = lambda list_, lable: list_.append(lable)
     frame_top_lable, frame_right_lable, frame_bottom_lable, frame_left_lable = [], [], [], []
     for x in range(xd + 2):
@@ -169,14 +175,10 @@ def frame(xd, yd, top_y = 3, x_size = 2, y_size = 1):
     print_button = tk.Button(window, text="Print", font="Helvetica 10",
                     width=x_size * 2, height=y_size, relief="ridge",
                     bg="lightslategray", command=btn_print)
-    new_button = tk.Button(window, text="New", font="Helvetica 10 bold",
-                    width=x_size * 2, height=y_size, relief="raised",
-                    bg="aliceblue", command=btn_new)
     exit_button = tk.Button(window, text="Exit", font="Helvetica 10 bold",
                     width=x_size * 2, height=y_size, relief="raised",
                     bg="darkred", fg="white", command=window.destroy)
-    print_button.grid(row=yd + top_y + 1, column=xd - 5, columnspan=2)
-    new_button.grid(row=yd + top_y + 1, column=xd - 3, columnspan=2)
+    print_button.grid(row=yd + top_y + 1, column=xd - 3, columnspan=2)
     exit_button.grid(row=yd + top_y + 1, column=xd - 1, columnspan=2)
 
 
